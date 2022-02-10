@@ -1,0 +1,69 @@
+def getIP():#得到当前电脑IP
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = (s.getsockname()[0])
+    s.close()
+    return ip
+
+def get_netcard():#得到当前电脑IP 及网络连接
+    from psutil import net_if_addrs
+    #import log
+    name = ip = mac = ''
+    info = net_if_addrs()
+    for k, v in info.items():
+        for item in range(0, len(v)):
+            if v[item][0] == 2 and getIP() in v[item][1]:
+                name = k
+                ip = v[item][1]
+                break
+    if name:
+        data = info[name]
+        for i in data:
+            if '-' in i[1] or ':' in i[1]:
+                if len(i[1])==17:
+                    mac = str(i[1]).replace('-','').replace(':','')
+                    break
+
+    info = {'name': name, 'ip': ip, 'mac': mac}
+    #log.debug('当前终端INFO:{}'.format(info))
+    return info
+def jjip(sjh,aa):#根据手机序列号查找对应的IP，sjh为序列号，aa当前电脑IP的最后一个点左边的部分
+    import subprocess
+    bz=0
+    ak="adb shell  getprop ro.serialno"
+    sjha=""
+    jieguo=""
+    for i in range(100,110):
+        print(i)
+        aak="adb connect {0}{1}".format(aa,i)
+        p = subprocess.Popen(aak, shell=True, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        for line in out.splitlines():
+            if "unable to connect" in line.decode('utf-8') or "cannot connect to" in line.decode('utf-8'):
+                continue
+            else:
+                print(line.decode('utf-8'))
+                jieguo=line.decode('utf-8')
+                bz=1
+                break
+        if bz==1:
+            break
+    if bz==1:
+        p1 = subprocess.Popen(ak, shell=True, stdout=subprocess.PIPE)
+        out1, err1 = p1.communicate()
+        for line1 in out1.splitlines():
+            sjha=line1.decode('utf-8')
+            if sjha==sjh:
+                return jieguo
+    else:
+        print("找不到对应的IP")
+        
+sjh="pvq4nrx4"
+aa=getIP()
+ab=aa.split('.')[-1]
+aa=aa.replace(ab,'')
+ac=jjip(sjh,aa)
+print(ac)
+
+print(aa)
